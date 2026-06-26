@@ -1,0 +1,174 @@
+basePath: /
+definitions:
+  models.Order:
+    properties:
+      book_id:
+        type: integer
+      id:
+        type: integer
+      quantity:
+        minimum: 1
+        type: integer
+    required:
+    - book_id
+    - quantity
+    type: object
+info:
+  contact:
+    email: mekuriategegne@gmail.com
+    name: Library System Team
+  description: "A production-grade microservice for managing orders in a distributed
+    library system.\n\nServices:\n- \U0001F4D8 Book Service (FastAPI + MySQL)\n- \U0001F4E6
+    Order Service (Go + PostgreSQL)\n\nFeatures:\n- Clean REST architecture\n- Full
+    CRUD operations\n- PostgreSQL persistence using GORM\n- Docker & Kubernetes ready\n-
+    Swagger API testing\n"
+  license:
+    name: YH Akademin
+  title: "\U0001F4E6 Order Service API"
+  version: "1.0"
+paths:
+  /orders:
+    get:
+      description: Returns a list of all orders in the system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Order'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all orders
+      tags:
+      - Orders
+    post:
+      consumes:
+      - application/json
+      description: Creates an order for a specific book with quantity. This will store
+        the order in the database.
+      parameters:
+      - description: Order payload
+        in: body
+        name: order
+        required: true
+        schema:
+          $ref: '#/definitions/models.Order'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Order created successfully
+          schema:
+            $ref: '#/definitions/models.Order'
+        "400":
+          description: Invalid request payload
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new order
+      tags:
+      - Orders
+  /orders/{id}:
+    delete:
+      description: Permanently deletes an order by ID
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Order deleted successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Order not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete an order
+      tags:
+      - Orders
+    get:
+      description: Fetch a single order using its unique ID
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Order'
+        "404":
+          description: Order not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get order by ID
+      tags:
+      - Orders
+    put:
+      consumes:
+      - application/json
+      description: Updates book_id or quantity of an existing order
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated order data
+        in: body
+        name: order
+        required: true
+        schema:
+          $ref: '#/definitions/models.Order'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Order'
+        "400":
+          description: Invalid input
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Order not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update an existing order
+      tags:
+      - Orders
+swagger: "2.0"

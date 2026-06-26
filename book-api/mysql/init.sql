@@ -1,0 +1,5 @@
+CREATE DATABASE IF NOT EXISTS books_test;
+
+GRANT ALL PRIVILEGES ON books_test.* TO 'bookuser'@'%';
+
+FLUSH PRIVILEGES;

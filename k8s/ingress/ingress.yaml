@@ -1,0 +1,73 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: library-ingress
+
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: localhost
+    http:
+      paths:
+
+
+      # Book API (FastAPI Book Service)
+      - path: /books
+        pathType: Prefix
+        backend:
+          service:
+            name: book-api
+            port:
+              number: 8000
+
+      - path: /docs
+        pathType: Prefix
+        backend:
+          service:
+            name: book-api
+            port:
+              number: 8000
+
+      - path: /openapi.json
+        pathType: Prefix
+        backend:
+          service:
+            name: book-api
+            port:
+              number: 8000
+
+      # Order API (Go Order Service)
+      - path: /orders
+        pathType: Prefix
+        backend:
+          service:
+            name: order-api
+            port:
+              number: 8080
+
+      - path: /swagger-ui
+        pathType: Prefix
+        backend:
+          service:
+            name: order-api
+            port:
+              number: 8080
+
+      - path: /swagger
+        pathType: Prefix
+        backend:
+          service:
+            name: order-api
+            port:
+              number: 8080
+
+      # React Frontend MUST BE LAST
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend
+            port:
+              number: 3000
+

@@ -1,0 +1,175 @@
+/* =========================
+   GLOBAL THEME (LIGHT SaaS)
+========================= */
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #ffffff;
+  color: #1f2937;
+}
+
+/* =========================
+   TOP BAR
+========================= */
+
+.topbar {
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 14px 20px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  font-weight: bold;
+  color: #0ea5e9; /* light blue */
+}
+
+.badge {
+  background: #fce7f3; /* light pink */
+  color: #db2777;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+/* =========================
+   HERO / DASHBOARD
+========================= */
+
+.hero h1 {
+  color: #0ea5e9; /* light blue */
+}
+
+.hero p {
+  color: #ec4899; /* pink */
+}
+
+/* =========================
+   CARDS
+========================= */
+
+.cards {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 40px;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  padding: 20px;
+  border-radius: 12px;
+  width: 260px;
+
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.card h3 {
+  color: #0ea5e9;
+}
+
+.card p {
+  color: #6b7280;
+}
+
+/* Links */
+.card a {
+  color: #ec4899;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+/* =========================
+   SWAGGER UI OVERRIDES
+========================= */
+
+.swagger-ui {
+  background: #ffffff !important;
+}
+
+.swagger-ui .topbar {
+  display: none;
+}
+
+/* API method colors (keep visible contrast) */
+.swagger-ui .opblock.opblock-get {
+  background: #eff6ff;
+}
+
+.swagger-ui .opblock.opblock-post {
+  background: #ecfdf5;
+}
+
+.swagger-ui .opblock.opblock-put {
+  background: #fff7ed;
+}
+
+.swagger-ui .opblock.opblock-delete {
+  background: #fef2f2;
+}
+
+/* Info header */
+.swagger-ui .info {
+  background: #f9fafb;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+/* Section titles */
+.swagger-ui .info .title {
+  background: #000000;
+  color: #ffffff !important;
+
+  padding: 14px 18px;
+  border-radius: 10px;
+
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.swagger-ui .info .description p {
+  color: #8F00FF !important;  /* ELECTRIC PURPLE */
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+.swagger-ui .info .description {
+  background: #f5f3ff;
+  border-left: 5px solid #8F00FF;
+
+  padding: 16px;
+  margin-top: 10px;
+  border-radius: 8px;
+}
+
+/* Contact + License container */
+..swagger-ui .info .info__contact,
+.swagger-ui .info .info__license {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+
+  padding: 12px;
+  margin-top: 12px;
+
+  border-radius: 10px;
+}
+
+.swagger-ui .info .info__contact p,
+.swagger-ui .info .info__license p {
+  color: #6b7280;
+}
+
+.swagger-ui .info .info__contact a {
+  color: #0ea5e9; /* light blue */
+  font-weight: 600;
+}
+
+.swagger-ui .info .info__license {
+  color: #ec4899; /* pink tone */
+  font-weight: 600;
+}

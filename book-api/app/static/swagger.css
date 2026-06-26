@@ -1,0 +1,24 @@
+.swagger-ui .info {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  padding: 16px;
+  border-radius: 10px;
+}
+
+.swagger-ui .info {
+  color: #8F00FF;
+}
+
+.swagger-ui .info * {
+  color: #8F00FF !important;
+}
+
+.swagger-ui .info .title {
+  color: #000000 !important;
+  font-weight: 700;
+}
+
+.swagger-ui .info a {
+  color: #0ea5e9 !important;
+  font-weight: 600;
+}
