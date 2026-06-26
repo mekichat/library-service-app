@@ -10,17 +10,50 @@ jobs:
   test-book-api:
     runs-on: ubuntu-latest
 
+    # 🟡 1. SERVICE CONTAINER (MySQL runs here)
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: books_test
+          MYSQL_USER: bookuser
+          MYSQL_PASSWORD: bookpass
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
     steps:
+
+      # checkout code
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      # setup python
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - run: |
+      # install dependencies
+      - name: Install dependencies
+        run: |
           cd book-api
           pip install -r requirements.txt
-          pytest
+
+      # run tests (THIS is where env is used)
+      - name: Run tests
+        working-directory: book-api
+        env:
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_DB: ${{ secrets.MYSQL_DB }}
+
+          DATABASE_URL: mysql+pymysql://${{ secrets.MYSQL_USER }}:${{ secrets.MYSQL_PASSWORD }}@127.0.0.1:3306/${{ secrets.MYSQL_DB }}
+        run: pytest
 
   test-order-api:
     runs-on: ubuntu-latest
