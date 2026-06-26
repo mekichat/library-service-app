@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+
+  test-book-api:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: |
+          cd book-api
+          pip install -r requirements.txt
+          pytest
+
+  test-order-api:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+
+      - run: |
+          cd order-api
+          go test ./...
+
+  build-images:
+    needs:
+      - test-book-api
+      - test-order-api
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/book-api:latest ./book-api
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/order-api:latest ./order-api
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/frontend:latest ./frontend
+
+      - run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/book-api:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/order-api:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/frontend:latest

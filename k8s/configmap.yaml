@@ -4,12 +4,15 @@ metadata:
   name: library-config
 
 data:
-  BOOK_DB_NAME: books
+  BOOK_DB_HOST: "mysql"
   BOOK_DB_PORT: "3306"
+  BOOK_DB_NAME: "books"
+  BOOK_DB_USER: "bookuser"
 
-  ORDER_DB_NAME: orders
+  ORDER_DB_HOST: "postgres"
   ORDER_DB_PORT: "5432"
+  ORDER_DB_NAME: "orders"
+  ORDER_DB_USER: "postgres"
 
   BOOK_SERVICE_URL: "http://book-api:8000"
-  BOOK_API_URL: "http://book-api:8000"
   ORDER_SERVICE_URL: "http://order-api:8080"

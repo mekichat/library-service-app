@@ -18,9 +18,19 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
+
+          envFrom:
+            - configMapRef:
+                name: library-config
+            - secretRef:
+                name: library-secrets
+
           env:
             - name: DB_DSN
-              value: host=postgres user=postgres password=postgres dbname=orders port=5432 sslmode=disable
+              value: "host=$(POSTGRES_HOST) user=$(POSTGRES_USER) password=$(POSTGRES_PASSWORD) dbname=$(POSTGRES_DB) port=$(POSTGRES_PORT) sslmode=disable"
 
             - name: BOOK_SERVICE_URL
-              value: http://book-api:8000
+              valueFrom:
+                configMapKeyRef:
+                  name: library-config
+                  key: BOOK_SERVICE_URL

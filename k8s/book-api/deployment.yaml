@@ -18,6 +18,13 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
+
+          envFrom:
+            - configMapRef:
+                name: library-config
+            - secretRef:
+                name: library-secrets
+
           env:
             - name: DATABASE_URL
-              value: mysql+pymysql://bookuser:bookpass@mysql:3306/books
+              value: "mysql+pymysql://$(MYSQL_USER):$(MYSQL_PASSWORD)@$(MYSQL_HOST):$(MYSQL_PORT)/$(MYSQL_DB)"

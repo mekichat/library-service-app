@@ -18,3 +18,20 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000
+
+          envFrom:
+            - configMapRef:
+                name: library-config
+
+          env:
+            - name: REACT_APP_BOOK_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: library-config
+                  key: BOOK_SERVICE_URL
+
+            - name: REACT_APP_ORDER_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: library-config
+                  key: ORDER_SERVICE_URL
