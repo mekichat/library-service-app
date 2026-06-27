@@ -7,6 +7,9 @@ on:
 
 jobs:
 
+  # =========================
+  # BOOK API TESTS
+  # =========================
   test-book-api:
     runs-on: ubuntu-latest
 
@@ -21,7 +24,7 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h localhost -proot"
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10
@@ -35,17 +38,18 @@ jobs:
 
       - name: Install dependencies
         working-directory: book-api
-        run: |
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
-      - name: Run unit and integration tests
+      - name: Run unit + integration tests
         working-directory: book-api
         env:
           DATABASE_URL: mysql+pymysql://${{ secrets.MYSQL_USER }}:${{ secrets.MYSQL_PASSWORD }}@127.0.0.1:3306/${{ secrets.MYSQL_DB }}
-        run: |
-          pytest tests/unit tests/integration -v
+        run: pytest tests/unit tests/integration -v
 
 
+  # =========================
+  # ORDER API TESTS
+  # =========================
   test-order-api:
     runs-on: ubuntu-latest
 
@@ -58,10 +62,12 @@ jobs:
 
       - name: Run Go tests
         working-directory: order-api
-        run: |
-          go test ./... -v
+        run: go test ./... -v
 
 
+  # =========================
+  # E2E TESTS (FULL STACK)
+  # =========================
   test-e2e:
     needs:
       - test-book-api
@@ -72,6 +78,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # =========================
+      # 1. Create env file safely
+      # =========================
       - name: Create .env.docker
         run: |
           cat <<EOF > .env.docker
@@ -83,53 +92,99 @@ jobs:
           POSTGRES_USER=${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+
+          MYSQL_PORT=3306
+          POSTGRES_PORT=5432
+
+          BOOK_SERVICE_URL=http://book-api:8000
+          BOOK_API_URL=http://localhost:8000
+          ORDER_API_URL=http://localhost:8080
           EOF
 
+      # =========================
+      # 2. Start full stack
+      # =========================
       - name: Start application stack
         run: |
-          docker compose --env-file .env.docker up -d --build
+          set -a
+          source .env.docker
+          set +a
 
-      - name: Wait for services
+          docker compose up -d --build
+
+      # =========================
+      # 3. Wait for databases
+      # =========================
+      - name: Wait for MySQL
         run: |
-          sleep 30
+          for i in {1..30}; do
+            docker exec mysql-db mysqladmin ping -uroot -proot && break
+            echo "Waiting for MySQL..."
+            sleep 2
+          done
 
-      - name: Check running containers
+      - name: Wait for Postgres
         run: |
-          docker ps
+          for i in {1..30}; do
+            docker exec postgres-db pg_isready -U postgres && break
+            echo "Waiting for Postgres..."
+            sleep 2
+          done
 
-      - name: Show logs on startup
+      # =========================
+      # 4. Wait for APIs
+      # =========================
+      - name: Wait for Book API
         run: |
-          docker compose logs
+          for i in {1..30}; do
+            curl -sf http://localhost:8000/docs && break
+            echo "Waiting for Book API..."
+            sleep 2
+          done
 
+      - name: Wait for Order API
+        run: |
+          for i in {1..30}; do
+            curl -sf http://localhost:8080/docs && break
+            echo "Waiting for Order API..."
+            sleep 2
+          done
+
+      # =========================
+      # 5. Run E2E tests
+      # =========================
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
       - name: Install test dependencies
         working-directory: book-api
-        run: |
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
       - name: Run E2E tests
         working-directory: book-api
-        run: |
-          pytest tests/e2e -v
+        run: pytest tests/e2e -v
 
-      - name: Collect logs if tests fail
+      # =========================
+      # 6. Debug logs on failure
+      # =========================
+      - name: Collect logs (on failure)
         if: failure()
-        run: |
-          docker compose logs
+        run: docker compose logs
 
+      # =========================
+      # 7. Cleanup
+      # =========================
       - name: Shutdown stack
         if: always()
-        run: |
-          docker compose down -v
+        run: docker compose down -v
 
 
+  # =========================
+  # BUILD & PUSH IMAGES
+  # =========================
   build-images:
     needs:
-      - test-book-api
-      - test-order-api
       - test-e2e
 
     runs-on: ubuntu-latest
@@ -142,13 +197,13 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build Docker images
+      - name: Build images
         run: |
           docker build -t ${{ secrets.DOCKER_USERNAME }}/book-api:latest ./book-api
           docker build -t ${{ secrets.DOCKER_USERNAME }}/order-api:latest ./order-api
           docker build -t ${{ secrets.DOCKER_USERNAME }}/frontend:latest ./frontend
 
-      - name: Push Docker images
+      - name: Push images
         run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/book-api:latest
           docker push ${{ secrets.DOCKER_USERNAME }}/order-api:latest
