@@ -106,10 +106,16 @@ jobs:
       # =========================
       - name: Start application stack
         run: |
-          set -a
-          source .env.docker
-          set +a
-
+          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }} \
+          MYSQL_USER=${{ secrets.MYSQL_USER }} \
+          MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }} \
+          MYSQL_DB=${{ secrets.MYSQL_DB }} \
+          POSTGRES_USER=${{ secrets.POSTGRES_USER }} \
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} \
+          POSTGRES_DB=${{ secrets.POSTGRES_DB }} \
+          BOOK_SERVICE_URL=http://book-api:8000 \
+          BOOK_API_URL=http://localhost:8000 \
+          ORDER_API_URL=http://localhost:8080 \
           docker compose up -d --build
 
       # =========================
