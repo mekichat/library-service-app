@@ -10,15 +10,14 @@ jobs:
   test-book-api:
     runs-on: ubuntu-latest
 
-    # 🟡 1. SERVICE CONTAINER (MySQL runs here)
     services:
       mysql:
         image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: books_test
-          MYSQL_USER: bookuser
-          MYSQL_PASSWORD: bookpass
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
         ports:
           - 3306:3306
         options: >-
@@ -28,32 +27,24 @@ jobs:
           --health-retries=10
 
     steps:
-
-      # checkout code
       - uses: actions/checkout@v4
 
-      # setup python
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      # install dependencies
       - name: Install dependencies
+        working-directory: book-api
         run: |
-          cd book-api
           pip install -r requirements.txt
 
-      # run tests (THIS is where env is used)
-      - name: Run tests
+      - name: Run unit and integration tests
         working-directory: book-api
         env:
-          MYSQL_USER: ${{ secrets.MYSQL_USER }}
-          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
-          MYSQL_DB: ${{ secrets.MYSQL_DB }}
-
           DATABASE_URL: mysql+pymysql://${{ secrets.MYSQL_USER }}:${{ secrets.MYSQL_PASSWORD }}@127.0.0.1:3306/${{ secrets.MYSQL_DB }}
-        run: pytest
+        run: |
+          pytest tests/unit tests/integration -v
+
 
   test-order-api:
     runs-on: ubuntu-latest
@@ -65,14 +56,81 @@ jobs:
         with:
           go-version: "1.24"
 
-      - run: |
-          cd order-api
-          go test ./...
+      - name: Run Go tests
+        working-directory: order-api
+        run: |
+          go test ./... -v
+
+
+  test-e2e:
+    needs:
+      - test-book-api
+      - test-order-api
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create .env.docker
+        run: |
+          cat <<EOF > .env.docker
+          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_USER=${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_DB=${{ secrets.MYSQL_DB }}
+
+          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+          EOF
+
+      - name: Start application stack
+        run: |
+          docker compose --env-file .env.docker up -d --build
+
+      - name: Wait for services
+        run: |
+          sleep 30
+
+      - name: Check running containers
+        run: |
+          docker ps
+
+      - name: Show logs on startup
+        run: |
+          docker compose logs
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install test dependencies
+        working-directory: book-api
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run E2E tests
+        working-directory: book-api
+        run: |
+          pytest tests/e2e -v
+
+      - name: Collect logs if tests fail
+        if: failure()
+        run: |
+          docker compose logs
+
+      - name: Shutdown stack
+        if: always()
+        run: |
+          docker compose down -v
+
 
   build-images:
     needs:
       - test-book-api
       - test-order-api
+      - test-e2e
 
     runs-on: ubuntu-latest
 
@@ -84,12 +142,14 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - run: |
+      - name: Build Docker images
+        run: |
           docker build -t ${{ secrets.DOCKER_USERNAME }}/book-api:latest ./book-api
           docker build -t ${{ secrets.DOCKER_USERNAME }}/order-api:latest ./order-api
           docker build -t ${{ secrets.DOCKER_USERNAME }}/frontend:latest ./frontend
 
-      - run: |
+      - name: Push Docker images
+        run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/book-api:latest
           docker push ${{ secrets.DOCKER_USERNAME }}/order-api:latest
           docker push ${{ secrets.DOCKER_USERNAME }}/frontend:latest

@@ -14,8 +14,8 @@ spec:
     spec:
       containers:
         - name: order-api
-          image: order-api:latest
-          imagePullPolicy: IfNotPresent
+          image: meki2026/order-api:${{ github.sha }}
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
 

@@ -1,26 +1,46 @@
 name: Deploy
 
 on:
-  workflow_dispatch:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
 
 jobs:
 
   deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
 
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # -------------------------
+      # 1. Setup kubeconfig
+      # -------------------------
       - name: Configure kubectl
         run: |
           mkdir -p ~/.kube
           echo "${{ secrets.KUBE_CONFIG }}" > ~/.kube/config
 
+      - name: Verify cluster connection
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+
+      # -------------------------
+      # 2. Apply ConfigMap
+      # -------------------------
       - name: Apply ConfigMap
         run: |
           kubectl apply -f k8s/configmap.yaml
 
-      - name: Create Secrets
+      # -------------------------
+      # 3. Create / Update Secrets
+      # -------------------------
+      - name: Apply Kubernetes Secrets
         run: |
           kubectl create secret generic library-secrets \
             --from-literal=MYSQL_USER=${{ secrets.MYSQL_USER }} \
@@ -29,12 +49,51 @@ jobs:
             --from-literal=POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} \
             --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Deploy
+      # -------------------------
+      # 4. Deploy infrastructure (DB first)
+      # -------------------------
+      - name: Deploy Databases
         run: |
-          kubectl apply -f k8s/
+          kubectl apply -f k8s/mysql/
+          kubectl apply -f k8s/postgres/
 
-      - name: Rolling updates
+      # -------------------------
+      # 5. Deploy services
+      # -------------------------
+      - name: Deploy Book API
         run: |
-          kubectl rollout status deployment/book-api
-          kubectl rollout status deployment/order-api
-          kubectl rollout status deployment/frontend
+          kubectl apply -f k8s/book-api/
+
+      - name: Deploy Order API
+        run: |
+          kubectl apply -f k8s/order-api/
+
+      - name: Deploy Frontend
+        run: |
+          kubectl apply -f k8s/frontend/
+
+      # -------------------------
+      # 6. Rolling updates (health check)
+      # -------------------------
+      - name: Wait for Book API rollout
+        run: |
+          kubectl rollout status deployment/book-api --timeout=180s
+
+      - name: Wait for Order API rollout
+        run: |
+          kubectl rollout status deployment/order-api --timeout=180s
+
+      - name: Wait for Frontend rollout
+        run: |
+          kubectl rollout status deployment/frontend --timeout=180s
+
+      # -------------------------
+      # 7. Verify deployment
+      # -------------------------
+      - name: Show running pods
+        run: |
+          kubectl get pods -o wide
+
+      - name: Show services
+        run: |
+          kubectl get svc

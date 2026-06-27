@@ -11,11 +11,11 @@ spec:
     metadata:
       labels:
         app: book-api
-    spec:
+    spec:      
       containers:
         - name: book-api
-          image: book-api:latest
-          imagePullPolicy: IfNotPresent
+          image: meki2026/book-api:${{ github.sha }}
+          imagePullPolicy: Always
           ports:
             - containerPort: 8000
 
