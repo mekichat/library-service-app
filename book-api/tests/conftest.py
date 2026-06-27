@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 # Must happen before importing app
 os.environ["ENV_FILE"] = ".env.test"
-load_dotenv(".env.test", override=True)
+load_dotenv()  # works locally if file exists, ignores in CI
 
 from app import models
 from app.main import app

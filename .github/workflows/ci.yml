@@ -163,13 +163,14 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install test dependencies
-        working-directory: book-api
+      - name: Install E2E dependencies
         run: pip install -r requirements.txt
 
       - name: Run E2E tests
-        working-directory: book-api
-        run: pytest tests/e2e -v
+        env:
+          BASE_URL_BOOK: http://localhost:8000
+          BASE_URL_ORDER: http://localhost:8080
+        run: pytest book-api/tests/e2e -v
 
       # =========================
       # 6. Debug logs on failure
