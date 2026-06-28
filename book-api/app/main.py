@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 
 
 import time
+from pathlib import Path
 from sqlalchemy.exc import OperationalError
 
 
@@ -52,7 +53,10 @@ app = FastAPI(
     }
 )
 
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+STATIC_DIR = Path(__file__).parent / "static"
+
+if STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 for i in range(10):
     try:
