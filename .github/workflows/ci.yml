@@ -205,12 +205,12 @@ jobs:
 
       - name: Run E2E tests
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: mysql+pymysql://${{ secrets.MYSQL_USER }}:${{ secrets.MYSQL_PASSWORD }}@127.0.0.1:3306/${{ secrets.MYSQL_DB }}
           BASE_URL_BOOK: http://localhost:8000
           BASE_URL_ORDER: http://localhost:8080
 
         run: |
-          echo "DATABASE_URL exists: $([ -n "$DATABASE_URL" ] && echo YES || echo NO)"
+          echo "DATABASE_URL=$DATABASE_URL"
           pytest book-api/tests/e2e -v
 
       # =========================
