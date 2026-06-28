@@ -1,9 +1,14 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
 # Must happen before importing app
 os.environ["ENV_FILE"] = ".env.test"
-load_dotenv()  # works locally if file exists, ignores in CI
+
+env_file = Path(__file__).parent.parent / ".env.test"
+
+if env_file.exists():
+    load_dotenv(env_file)
 
 from app import models
 from app.main import app

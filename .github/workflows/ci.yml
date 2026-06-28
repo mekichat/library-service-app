@@ -205,9 +205,13 @@ jobs:
 
       - name: Run E2E tests
         env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           BASE_URL_BOOK: http://localhost:8000
           BASE_URL_ORDER: http://localhost:8080
-        run: pytest book-api/tests/e2e -v
+
+        run: |
+          echo "DATABASE_URL exists: $([ -n "$DATABASE_URL" ] && echo YES || echo NO)"
+          pytest book-api/tests/e2e -v
 
       # =========================
       # 6. Debug logs on failure
