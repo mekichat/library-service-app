@@ -105,18 +105,24 @@ jobs:
       # 2. Start full stack
       # =========================
       - name: Start application stack
-        run: |
-          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }} \
-          MYSQL_USER=${{ secrets.MYSQL_USER }} \
-          MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }} \
-          MYSQL_DB=${{ secrets.MYSQL_DB }} \
-          POSTGRES_USER=${{ secrets.POSTGRES_USER }} \
-          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} \
-          POSTGRES_DB=${{ secrets.POSTGRES_DB }} \
-          BOOK_SERVICE_URL=http://book-api:8000 \
-          BOOK_API_URL=http://localhost:8000 \
-          ORDER_API_URL=http://localhost:8080 \
-          docker compose up -d --build
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_DB: ${{ secrets.MYSQL_DB }}
+
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+
+          MYSQL_PORT: 3306
+          POSTGRES_PORT: 5432
+
+          BOOK_SERVICE_URL: http://book-api:8000
+          BOOK_API_URL: http://localhost:8000
+          ORDER_API_URL: http://localhost:8080
+
+        run: docker compose up -d --build
 
       # =========================
       # 3. Wait for databases
