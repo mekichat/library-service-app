@@ -133,7 +133,24 @@ jobs:
           BOOK_API_URL: http://localhost:8000
           ORDER_API_URL: http://localhost:8080
 
+      - name: Clean previous containers
+        run: |
+          docker compose down -v --remove-orphans || true
+
+      - name: Verify .env.docker
+        run: |
+          ls -la
+          test -f .env.docker
+          echo ".env.docker exists"      
+
         run: docker compose up -d --build
+
+      - name: Debug startup
+        if: failure()
+        run: |
+          docker ps -a
+          docker logs mysql-db
+          docker logs postgres-db
 
       # =========================
       # 3. Wait for databases
